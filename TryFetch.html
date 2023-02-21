@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <script type='text/javascript' src='config.js'></script>
+    <script>
+      async function getCompleteResponseFromAPI(countryName, totDays) {
+        const prompt = "Create an hour by hour itinerary for a " + totDays + " trip to" + countryName;
+        const aaa = config.openaikey;
+
+        const response = await fetch("https://api.openai.com/v1/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Number.MAX_VALUE,
+            "Authorization": aaa
+          },
+
+          body: JSON.stringify({
+            model: 'text-davinci-003',
+            prompt: prompt,
+            top_p: 1,
+            frequency_penalty: 0,
+            presence_penalty: 0,
+            max_tokens: 2000,
+            temperature: 0.5,
+          })
+        });
+
+        var reply = "";
+        if (response.status == 200) {
+          const json = await response.json();
+          reply = json.choices[0].text;
+          console.log(json);
+        } else {
+          reply = "Got no response (" + response.status + ") from server. Please try again later.";
+        }
+        return reply;
+      }
+
+      function displayHeader() {
+        const countryName = sessionStorage.getItem('countryName');
+        const days = sessionStorage.getItem('Days');
+        const aaa = config.mapkey;
+
+        var data = "<H1>Generating an hour by hour itinerary for a " + days + " day trip to " + countryName +" ....</H1>";
+        data += "<p>Hold on - it might take a while...chatGPT can get busy!<p>&nbsp;<p>";
+        let mapframe =`<iframe
+                        width="450"
+                        height="450"
+                        frameborder="0" style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://www.google.com/maps/embed/v1/place/?key=AIzaSyAI-ZhF5xHdIA2qN4KV1QMdb1nPNv0UDEE&q=${countryName}"
+                        allowfullscreen>
+                      </iframe>
+                      `
+        data += mapframe;
+        let hourglass=`<iframe
+                        width="450"
+                        height="450"
+                        frameborder="0" style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="HourGlass.webp">
+                        </iframe>
+                        `
+        data += hourglass;
+        document.getElementById("output").innerHTML = data
+      }
+
+      async function displayMessageTotal() {
+        const countryName = sessionStorage.getItem('countryName');
+        const days = sessionStorage.getItem('Days');
+        var retItin = await getCompleteResponseFromAPI(countryName, days);
+        var data = "<p>"  + retItin.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        const daybyday = data.split('Day ');
+        var payload = "<H1>Here is a day by day itinerary for a " + days + " day trip to " + countryName +" Prepared by</H1>";
+        payload += '<IMG src="chatgpt-logo.png" alt="Chatgpt-logo" width="40"></IMG>';
+
+        if (daybyday.length > 0) {
+          for (let i = 1; i < daybyday.length; i++) {
+            //alert("Going for "+ i + "\n" + daybyday[i]);
+            payload += "<hr><B>DAY "+ i + "</B><hr>" + daybyday[i].slice(1);
+          }
+        }
+        document.getElementById("output").innerHTML = payload;
+      }
+
+      
+    </script>
+  </head>
+
+  <body onload = "displayHeader(); displayMessageTotal()">
+    <div id="output">
+    </div>
+  </body>
+</html>

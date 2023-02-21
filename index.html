@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <style>
+      #map {
+        display: flex;
+        justify-content: center;        
+        border: 1px solid;
+        text-align: center;
+      }       
+    </style>
+  </head>
+  <body>
+      <P><HR></P>
+
+        <table>
+          <tr>
+            <td>
+              <table>
+                <tr>
+                  <td><H1>Where would you like to travel?</H1></td>
+                </tr>
+                <tr>
+                  <td><H1>Let's create a 7 day itinerary for you using <IMG src="chatgpt-logo.png" alt="Chatgpt-logo" width="40"></IMG>.</H1></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+      <BR>
+    </H1>
+    <div id="map"></div>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script> 
+    <script>
+      const width = 800;
+      const height = 800;
+
+      const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+      const svg = d3.select("#map")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(function(data) {
+        const countries = topojson.feature(data, data.objects.countries);
+
+        const projection = d3.geoMercator()
+          .fitSize([width, height], countries);
+
+        var path = d3.geoPath().projection(projection);
+
+        svg.selectAll("path")
+          .data(countries.features)
+          .enter()
+          .append("path")
+          .attr("fill", d => color(d.id))
+          .attr("d", path)
+          .attr("stroke", "#fff")
+          .on("mouseover", function(d) {
+            d3.select(this).attr("stroke", "#fff").attr("stroke-width", "3").attr("fill", d => color(d.id-1));
+          })
+          .on("mouseout", function(d) {
+            d3.select(this).attr("stroke", "#fff").attr("stroke-width", "1").attr("fill", d => color(d.id));
+          })        
+          .on("click", function(d) {
+            sessionStorage.setItem("countryName", d.properties.name);
+            sessionStorage.setItem("Days", "7");
+            window.open("TryFetch.html");
+          });
+      });
+    </script>
+    <BR>
+      Click on the country you want to travel to
+      <HR>
+  </body>
+</html>
